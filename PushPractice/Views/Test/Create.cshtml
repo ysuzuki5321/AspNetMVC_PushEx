@@ -1,0 +1,66 @@
+﻿@model PushPractice.Controllers.Status
+@{
+    ViewBag.Title = "Test";
+}
+
+<h2>Test</h2>
+
+@using (Ajax.BeginForm("Create", new AjaxOptions()
+{
+    InsertionMode = InsertionMode.Replace,
+    UpdateTargetId = "tl"    
+}))
+{
+<table id="tl">
+    <tr>
+        <td>name</td>
+        <td>text</td>
+    </tr>
+
+    @foreach (var item in Enumerable.Reverse(Model.list))
+    {
+        <tr>
+            <td>@item.Name</td>
+            <td>@item.Text</td>
+        </tr>
+
+    }
+</table>
+    @Html.HiddenFor(m => m.Id);
+    @Html.TextBoxFor(m => m.Text);
+    @Html.TextBoxFor(m => m.Name);
+    <input type="submit" value="send" />
+}
+
+@section scripts{
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var callback = function (since_id) {
+                $.ajax({
+                    type: "POST",
+                    url: "/Test/Receive",
+                    data: "since_id=" + since_id,
+                    dataType: "json",
+                    success: function (msg) {
+                        var table = document.getElementById("tl");
+                        while (table.rows.length > 1) table.deleteRow(1);
+
+                        jQuery.each(msg, function () {
+                            if (this.Name != null)
+                                $("#tl tr:first-child").after("<tr><td>" + this.Name + "</td><td>" + this.Text + "</td></tr>");
+                        });
+
+                        callback(@Model.Id);
+                    },
+                    error: function (e) {
+                        callback(since_id);
+                    }
+                });
+
+
+            }
+
+            callback(@Model.Id);
+        });
+    </script>
+}
